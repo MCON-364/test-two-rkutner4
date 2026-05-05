@@ -1,8 +1,9 @@
 package edu.touro.las.mcon364.test2;
 
 import java.util.List;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * ══════════════════════════════════════════════════════════════
@@ -48,7 +49,7 @@ public class ParallelReportBuilder {
 
 
     // TODO 1: declare and initialize private thread-safe progress tracking state called numberOfBatchesProcessed
-    
+    private AtomicInteger numberOfBatchesProcessed = new AtomicInteger(0);
     /*
      * TODO 2 — generateReport(List<List<Transaction>> batches, int workers)
      *
@@ -78,13 +79,17 @@ public class ParallelReportBuilder {
         // TODO 2A: validate inputs where appropriate
 
         // TODO 2B: create the concurrency structure needed for the pattern you chose
-
+        ExecutorService pool = Executors.newFixedThreadPool(workers);
 
         // TODO 2C: submit or assign one unit of work per batch
         // Each unit of work should:
         // - compute BatchStats for that batch
         // - safely record that one more batch has been processed
         // - you have to use streams here
+        batches.stream()
+                .collect(Collectors.toCollection());
+
+        numberOfBatchesProcessed.incrementAndGet();
 
         long totalAmount = 0;
         long totalCount = 0;
@@ -94,11 +99,17 @@ public class ParallelReportBuilder {
         // TODO 2D: after all work has been started, collect results
         // and combine them into the summary variables above
         // you don't have to use streams here. In this case for loop is acceptable
+        for (List<Transaction> batch : batches) {
+
+        }
 
         // TODO 2E: shut down any concurrency resources you created
-
+        pool.shutdown();
+        if (!pool.awaitTermination(10, TimeUnit.SECONDS)) {
+            pool.shutdownNow();
+        }
         // TODO 2F: return the completed ReportSummary
-        return null; //placeholder
+        return new ReportSummary(totalAmount, totalCount, globalMax, globalMin, globalMax);
     }
 
     /*
@@ -107,6 +118,6 @@ public class ParallelReportBuilder {
      * Return the current number of batches processed.
      */
     public int getProcessedBatchCount() {
-       return 0; //placeholder
+       return numberOfBatchesProcessed.get();
     }
 }
